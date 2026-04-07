@@ -1,0 +1,35 @@
+import { db } from '../../../shared/infrastructure/db/client.js'
+
+interface JobData { requestId: string }
+
+export class NotifyWebhookUseCase {
+  async execute({ requestId }: JobData): Promise<void> {
+    const { rows: [req] } = await db.query(
+      `SELECT cr.id, cr.external_id, cr.status, cr.expected_amount, cr.currency, ac.webhook_url
+       FROM conciliation_requests cr
+       JOIN account_config ac ON ac.account_id = cr.account_id
+       WHERE cr.id = $1`,
+      [requestId]
+    )
+    if (!req?.webhook_url || req.status !== 'matched') return
+
+    const { rows: [match] } = await db.query(
+      `SELECT id FROM conciliated_transactions WHERE request_id = $1 AND is_primary = true`,
+      [requestId]
+    )
+
+    await fetch(req.webhook_url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        external_id: req.external_id,
+        amount:      Number(req.expected_amount),
+        currency:    req.currency,
+      })
+    })
+
+    if (match) {
+      await db.query(`UPDATE conciliated_transactions SET is_notified=true WHERE id=$1`, [match.id])
+    }
+  }
+}

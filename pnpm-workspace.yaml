@@ -1,0 +1,6 @@
+onlyBuiltDependencies:
+  - bcrypt
+  - esbuild
+  - msgpackr-extract
+packages:
+  - client
