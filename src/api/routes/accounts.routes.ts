@@ -64,6 +64,32 @@ accountsRouter.put('/:accountId/config', async (req, res) => {
     return
   }
 
+  const normalizedPollingMethod = (polling_method ?? 'GET') as 'GET' | 'POST'
+
+  let normalizedPollingBody: unknown = null
+  if (normalizedPollingMethod === 'POST') {
+    if (polling_body == null) {
+      normalizedPollingBody = null
+    } else if (typeof polling_body === 'string') {
+      const trimmed = polling_body.trim()
+      if (!trimmed) {
+        normalizedPollingBody = null
+      } else {
+        try {
+          normalizedPollingBody = JSON.parse(trimmed)
+        } catch {
+          res.status(400).json({ error: 'polling_body must be valid JSON (or empty)' })
+          return
+        }
+      }
+    } else {
+      normalizedPollingBody = polling_body
+    }
+  }
+
+  const normalizedAuthToken =
+    typeof auth_token === 'string' && auth_token.trim() ? auth_token.trim() : null
+
   const { rows: [config] } = await db.query(
     `INSERT INTO account_config
        (id, account_id, pending_orders_endpoint, webhook_url, polling_interval_seconds,
@@ -83,8 +109,8 @@ accountsRouter.put('/:accountId/config', async (req, res) => {
     [
       accountId, pending_orders_endpoint, webhook_url,
       polling_interval_seconds ?? 60, retry_limit ?? 3,
-      polling_method ?? 'GET', polling_body ?? null,
-      auth_type ?? 'bearer', auth_token ?? null,
+      normalizedPollingMethod, normalizedPollingBody,
+      auth_type ?? 'bearer', normalizedAuthToken,
     ]
   )
 

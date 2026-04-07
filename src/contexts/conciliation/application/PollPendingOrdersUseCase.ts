@@ -16,10 +16,12 @@ export class PollPendingOrdersUseCase {
 
     // Build auth header
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (config.auth_type === 'api_key') {
-      headers['Api-Key'] = config.auth_token ?? ''
-    } else {
-      headers['Authorization'] = `Bearer ${config.auth_token ?? ''}`
+    const token = typeof config.auth_token === 'string' && config.auth_token.trim()
+      ? config.auth_token.trim()
+      : null
+    if (token) {
+      if (config.auth_type === 'api_key') headers['Api-Key'] = token
+      else headers['Authorization'] = `Bearer ${token}`
     }
 
     // Fetch orders
@@ -30,9 +32,27 @@ export class PollPendingOrdersUseCase {
       body: isPost ? JSON.stringify(config.polling_body ?? {}) : undefined,
     })
 
-    if (!response.ok) throw new Error(`Polling failed: ${response.status}`)
+    const contentType = response.headers.get('content-type') ?? ''
+    if (!response.ok) {
+      const bodySnippet = await response.text().catch(() => '')
+      throw new Error(
+        `Polling failed: ${response.status} ${response.statusText} (content-type: ${contentType})` +
+        (bodySnippet ? ` body: ${bodySnippet.slice(0, 300)}` : '')
+      )
+    }
 
-    const orders: any[] = await response.json()
+    if (!contentType.toLowerCase().includes('application/json')) {
+      const bodySnippet = await response.text().catch(() => '')
+      throw new Error(
+        `Polling returned non-JSON response (content-type: ${contentType})` +
+        (bodySnippet ? ` body: ${bodySnippet.slice(0, 300)}` : '')
+      )
+    }
+
+    const orders: any = await response.json()
+    if (!Array.isArray(orders)) {
+      throw new Error(`Polling response must be a JSON array of orders`)
+    }
 
     for (const order of orders) {
       if (!order.external_id || order.amount == null || !order.currency || !order.sender_name) {
