@@ -1,6 +1,12 @@
 <div align="center">
+  <a href="#">
+    <img src="client/public/readme/readme-banner.jpg" alt="ReconBanker" />
+  </a>
+
   <h1>ReconBanker</h1>
+
   <p>Automated bank-to-order reconciliation for financial operations teams.</p>
+
   <p><a href="#quick-start">Get Started</a> · <a href="#documentation">Documentation</a> · <a href="#api-reference">API Reference</a></p>
 </div>
 
