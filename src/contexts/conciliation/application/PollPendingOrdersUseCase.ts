@@ -49,9 +49,14 @@ export class PollPendingOrdersUseCase {
       )
     }
 
-    const orders: any = await response.json()
-    if (!Array.isArray(orders)) {
-      throw new Error(`Polling response must be a JSON array of orders`)
+    const raw: any = await response.json()
+    const orders: any = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.data)
+        ? raw.data
+        : null
+    if (!orders) {
+      throw new Error(`Polling response must be a JSON array of orders (got: ${JSON.stringify(raw).slice(0, 200)})`)
     }
 
     for (const order of orders) {

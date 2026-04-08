@@ -3,7 +3,6 @@ CREATE TABLE account_config (
   account_id               UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
   pending_orders_endpoint  TEXT NOT NULL,
   webhook_url              TEXT NOT NULL,
-  polling_interval_seconds INT NOT NULL DEFAULT 60,
   retry_limit              INT NOT NULL DEFAULT 3,
   created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
