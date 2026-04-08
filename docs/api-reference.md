@@ -124,7 +124,7 @@ Returns the account's reconciliation configuration.
 
 Create or update account configuration.
 
-**Body** — same shape as config response above.
+**Body** - same shape as config response above.
 
 ---
 
@@ -207,4 +207,4 @@ Promote a script from `review` to `active` status. The previously active script 
 
 ### GET /health
 
-Returns `200 OK` — no authentication required. Used for liveness checks.
+Returns `200 OK` - no authentication required. Used for liveness checks.

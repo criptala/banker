@@ -3,7 +3,7 @@
 ```
 reconbanker/
 ├── src/                                    # Backend source
-│   ├── index.ts                            # Entry point — servers, workers, event handlers
+│   ├── index.ts                            # Entry point - servers, workers, event handlers
 │   ├── api/
 │   │   ├── server.ts                       # Express app, CORS, route registration
 │   │   ├── middlewares/
@@ -11,10 +11,10 @@ reconbanker/
 │   │   │   └── error.middleware.ts         # Global error handler
 │   │   └── routes/
 │   │       ├── auth.routes.ts              # POST /auth/register, /auth/login
-│   │       ├── accounts.routes.ts          # /accounts — CRUD + config + scrape trigger
-│   │       ├── banks.routes.ts             # /banks — CRUD + scripts
-│   │       ├── conciliation.routes.ts      # /conciliation — requests, manual run, poll
-│   │       └── scripts.routes.ts           # /scripts — list, detail, promote
+│   │       ├── accounts.routes.ts          # /accounts - CRUD + config + scrape trigger
+│   │       ├── banks.routes.ts             # /banks - CRUD + scripts
+│   │       ├── conciliation.routes.ts      # /conciliation - requests, manual run, poll
+│   │       └── scripts.routes.ts           # /scripts - list, detail, promote
 │   ├── contexts/
 │   │   ├── account/                        # Account & Bank bounded context
 │   │   │   ├── domain/

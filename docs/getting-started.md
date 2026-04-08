@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) >= 20
-- [pnpm](https://pnpm.io/) >= 10 — `npm install -g pnpm`
+- [pnpm](https://pnpm.io/) >= 10 - `npm install -g pnpm`
 - [Docker](https://www.docker.com/) with Compose v2
 
 ## One-command setup
@@ -70,7 +70,7 @@ SCRAPE_INTERVAL_SECONDS=600
 pnpm migrate
 ```
 
-Migrations run in order from `src/shared/infrastructure/db/migrations/`. They are idempotent — safe to run multiple times.
+Migrations run in order from `src/shared/infrastructure/db/migrations/`. They are idempotent - safe to run multiple times.
 
 ### 5. Start the backend
 
@@ -78,7 +78,7 @@ Migrations run in order from `src/shared/infrastructure/db/migrations/`. They ar
 pnpm dev
 ```
 
-Runs `tsx watch src/index.ts` — restarts on file changes.
+Runs `tsx watch src/index.ts` - restarts on file changes.
 
 ### 6. Start the frontend
 
@@ -95,9 +95,9 @@ Vite dev server starts at `http://localhost:5173`. API calls are proxied to `htt
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
-| `REDIS_URL` | Yes | — | Redis connection string |
-| `JWT_SECRET` | Yes | — | Secret for signing JWT tokens — use a long random string in production |
+| `DATABASE_URL` | Yes | - | PostgreSQL connection string |
+| `REDIS_URL` | Yes | - | Redis connection string |
+| `JWT_SECRET` | Yes | - | Secret for signing JWT tokens - use a long random string in production |
 | `PORT` | No | `3000` | Backend API port |
 | `NODE_ENV` | No | `development` | Set to `production` to disable stack traces in error responses |
 | `POLLING_INTERVAL_SECONDS` | No | `60` | Interval for polling customer order endpoints |

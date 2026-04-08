@@ -20,7 +20,7 @@ ReconBanker is a self-hosted reconciliation engine that scrapes bank transaction
 - **Polls pending orders** from customer ERP or order-management systems via HTTP
 - **Reconciles transactions to orders** using a rule-based engine (exact amount + date window) and a fuzzy sender-name heuristic
 - **Notifies customers** via webhook when a match is found, including match type and transaction detail
-- Operates in a **multi-account, multi-bank** model — each account has its own config, scrape schedule, and webhook
+- Operates in a **multi-account, multi-bank** model - each account has its own config, scrape schedule, and webhook
 
 ## Feature surface
 

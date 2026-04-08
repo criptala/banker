@@ -10,32 +10,32 @@ The backend is organized into four bounded contexts under `src/contexts/`:
 
 Manages accounts and banks.
 
-- **Account** — links a customer to a bank, holds status
-- **Bank** — defines a supported bank (code, name, login URL)
-- **AccountConfig** — per-account webhook URL, polling endpoint, auth settings
+- **Account** - links a customer to a bank, holds status
+- **Bank** - defines a supported bank (code, name, login URL)
+- **AccountConfig** - per-account webhook URL, polling endpoint, auth settings
 
 ### `banking`
 
 Handles bank scraping and transaction ingestion.
 
-- **BankTransaction** — a transaction scraped from a bank account
-- **ScrapeRun / ScrapeStep** — audit trail of each scraping execution
-- **ScriptEnginePort** — port abstraction; `PlaywrightRunner` is the adapter
+- **BankTransaction** - a transaction scraped from a bank account
+- **ScrapeRun / ScrapeStep** - audit trail of each scraping execution
+- **ScriptEnginePort** - port abstraction; `PlaywrightRunner` is the adapter
 
 ### `conciliation`
 
-The reconciliation engine — the core of the product.
+The reconciliation engine - the core of the product.
 
-- **ConciliationRequest** — an order received from a customer system, to be matched
-- **ConciliationAttempt** — each matching attempt with its result and reason
-- **ConciliatedTransaction** — the confirmed match between a request and a transaction
-- **ConciliationEngine** — runs rules and heuristics to produce a `MatchResult`
+- **ConciliationRequest** - an order received from a customer system, to be matched
+- **ConciliationAttempt** - each matching attempt with its result and reason
+- **ConciliatedTransaction** - the confirmed match between a request and a transaction
+- **ConciliationEngine** - runs rules and heuristics to produce a `MatchResult`
 
 ### `script-engine`
 
 Manages Playwright automation scripts.
 
-- **BankScript** — versioned script associated with a bank
+- **BankScript** - versioned script associated with a bank
 - Scripts flow from `review` → `active` via `PromoteScriptUseCase`
 - Supported banks: Itaú, Mi Dinero
 
@@ -43,12 +43,12 @@ Manages Playwright automation scripts.
 
 `ConciliationEngine` processes each request in three phases:
 
-1. **Deterministic filters** — applied to all candidate transactions:
-   - `ExactAmountRule` — amount must match exactly
-   - `DateWindowRule` — transaction must be within 5 days of request creation date
+1. **Deterministic filters** - applied to all candidate transactions:
+   - `ExactAmountRule` - amount must match exactly
+   - `DateWindowRule` - transaction must be within 5 days of request creation date
 
-2. **Heuristic scoring** — applied to candidates that pass all filters:
-   - `FuzzySenderHeuristic` — fuzzy string match between `sender_name` fields (score 0–1)
+2. **Heuristic scoring** - applied to candidates that pass all filters:
+   - `FuzzySenderHeuristic` - fuzzy string match between `sender_name` fields (score 0–1)
 
 3. **Result resolution**:
    - One candidate with best score → `matched`
@@ -74,19 +74,19 @@ An in-memory pub/sub bus (`EventBus`) connects contexts without direct coupling:
 
 | Event | Published by | Handled by |
 |---|---|---|
-| `AccountCreated` | `CreateAccountUseCase` | — |
+| `AccountCreated` | `CreateAccountUseCase` | - |
 | `TransactionIngested` | `RunBankScrapeUseCase` | Enqueues pending conciliation jobs |
 | `ConciliationMatched` | `RunConciliationUseCase` | Enqueues webhook notification |
-| `ConciliationFailed` | `RunConciliationUseCase` | — |
-| `ScrapeRunFailed` | `RunBankScrapeUseCase` | — |
+| `ConciliationFailed` | `RunConciliationUseCase` | - |
+| `ScrapeRunFailed` | `RunBankScrapeUseCase` | - |
 
 ## Shared kernel
 
 `src/shared/domain/` provides base classes:
 
-- `Entity` — base class with identity and equality
-- `AggregateRoot extends Entity` — adds domain event collection and publishing
-- `ValueObject` — structural equality helpers
+- `Entity` - base class with identity and equality
+- `AggregateRoot extends Entity` - adds domain event collection and publishing
+- `ValueObject` - structural equality helpers
 
 ## Database
 

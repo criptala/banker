@@ -64,4 +64,4 @@ Where `NNN` is the next sequential number (e.g. `017_add_column_x.sql`). The mig
 | PostgreSQL | 5432 |
 | Redis | 6379 |
 
-Vite proxies all `/api` requests to `http://localhost:3000` — configured in `client/vite.config.ts`.
+Vite proxies all `/api` requests to `http://localhost:3000` - configured in `client/vite.config.ts`.
