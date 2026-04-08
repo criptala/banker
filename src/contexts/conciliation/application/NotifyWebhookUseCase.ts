@@ -28,7 +28,7 @@ export class NotifyWebhookUseCase {
       else headers['Authorization'] = `Bearer ${webhookToken}`
     }
 
-    await fetch(req.webhook_url, {
+    const response = await fetch(req.webhook_url, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -37,6 +37,11 @@ export class NotifyWebhookUseCase {
         currency:    req.currency,
       })
     })
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '')
+      throw new Error(`Webhook failed: ${response.status} ${response.statusText}` + (body ? ` — ${body.slice(0, 300)}` : ''))
+    }
 
     if (match) {
       await db.query(`UPDATE conciliated_transactions SET is_notified=true WHERE id=$1`, [match.id])
