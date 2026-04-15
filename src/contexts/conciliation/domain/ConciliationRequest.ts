@@ -1,10 +1,11 @@
 import { AggregateRoot } from '../../../shared/domain/AggregateRoot.js'
 import { ConciliationMatchedEvent } from '../../../shared/events/events/ConciliationMatched.event.js'
 import { ConciliationFailedEvent } from '../../../shared/events/events/ConciliationFailed.event.js'
+import { ConciliationExpiredEvent } from '../../../shared/events/events/ConciliationExpired.event.js'
 
 export type ConciliationStatus =
   | 'pending' | 'processing' | 'matched'
-  | 'not_found' | 'ambiguous' | 'failed'
+  | 'not_found' | 'ambiguous' | 'failed' | 'expired'
 
 interface Props {
   accountId: string
@@ -71,5 +72,10 @@ export class ConciliationRequest extends AggregateRoot<string> {
     this.props.status = 'failed'
     this.props.retryCount++
     this.addDomainEvent(new ConciliationFailedEvent(this._id, this.props.accountId, 'system_error'))
+  }
+
+  markExpired() {
+    this.props.status = 'expired'
+    this.addDomainEvent(new ConciliationExpiredEvent(this._id, this.props.accountId))
   }
 }

@@ -1,23 +1,30 @@
 import { Queues } from './QueueRegistry.js'
 import { db } from '../db/client.js'
+import { ExpireStaleRequestsUseCase } from '../../../contexts/conciliation/application/ExpireStaleRequestsUseCase.js'
 
 export class Scheduler {
   private timers: NodeJS.Timeout[] = []
+  private expireUseCase = new ExpireStaleRequestsUseCase()
 
   async start(): Promise<void> {
-    const pollingInterval = Number(process.env.POLLING_INTERVAL_SECONDS ?? 60) * 1000
-    const scrapeInterval  = Number(process.env.SCRAPE_INTERVAL_SECONDS ?? 3600) * 1000
+    const pollingInterval = Number(process.env.POLLING_INTERVAL_SECONDS ?? 600) * 1000
+    const scrapeInterval  = Number(process.env.SCRAPE_INTERVAL_SECONDS ?? 1200) * 1000
+    const expireInterval  = Number(process.env.EXPIRE_STALE_REQUESTS_INTERVAL_SECONDS ?? 3600) * 1000
 
     // Arranca inmediatamente y luego en loop
     await this.enqueuePolling()
     await this.enqueueScraping()
+    await this.expireStaleRequests()
 
     this.timers.push(
       setInterval(() => this.enqueuePolling(),  pollingInterval),
       setInterval(() => this.enqueueScraping(), scrapeInterval),
+      setInterval(() => this.expireStaleRequests(), expireInterval),
     )
 
-    console.log(`Scheduler started — polling every ${pollingInterval / 1000}s, scraping every ${scrapeInterval / 1000}s`)
+    console.log(
+      `Scheduler started — polling every ${pollingInterval / 1000}s, scraping every ${scrapeInterval / 1000}s, expiring every ${expireInterval / 1000}s`
+    )
   }
 
   stop(): void {
@@ -73,5 +80,9 @@ export class Scheduler {
     }
 
     console.log(`[Scheduler] Enqueued scraping for ${accounts.length} account(s)`)
+  }
+
+  private async expireStaleRequests(): Promise<void> {
+    await this.expireUseCase.execute()
   }
 }

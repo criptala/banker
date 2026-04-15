@@ -12,7 +12,7 @@ export class NotifyWebhookUseCase {
        WHERE cr.id = $1`,
       [requestId]
     )
-    if (!req?.webhook_url || !['matched', 'ambiguous'].includes(req.status)) return
+    if (!req?.webhook_url || !['matched', 'ambiguous', 'expired'].includes(req.status)) return
 
     const match = req.status === 'matched'
       ? (await db.query(
