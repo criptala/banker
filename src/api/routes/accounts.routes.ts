@@ -58,6 +58,7 @@ accountsRouter.put('/:accountId/config', async (req, res) => {
     auth_token,
     bank_username,
     bank_password,
+    notify_on_expired,
   } = req.body
 
   if (!pending_orders_endpoint || !webhook_url) {
@@ -98,8 +99,8 @@ accountsRouter.put('/:accountId/config', async (req, res) => {
     `INSERT INTO account_config
        (id, account_id, pending_orders_endpoint, webhook_url,
         retry_limit, polling_method, polling_body, auth_type, auth_token,
-        webhook_auth_type, webhook_auth_token)
-     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        webhook_auth_type, webhook_auth_token, notify_on_expired)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      ON CONFLICT (account_id) DO UPDATE SET
        pending_orders_endpoint = $2,
        webhook_url             = $3,
@@ -110,6 +111,7 @@ accountsRouter.put('/:accountId/config', async (req, res) => {
        auth_token              = $8,
        webhook_auth_type       = $9,
        webhook_auth_token      = $10,
+       notify_on_expired       = $11,
        updated_at              = now()
      RETURNING *`,
     [
@@ -118,6 +120,7 @@ accountsRouter.put('/:accountId/config', async (req, res) => {
       normalizedPollingMethod, normalizedPollingBody,
       auth_type ?? 'bearer', normalizedAuthToken,
       webhook_auth_type ?? null, normalizedWebhookAuthToken,
+      notify_on_expired ?? false,
     ]
   )
 
