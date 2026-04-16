@@ -69,7 +69,12 @@
     "dateFrom": "From",
     "dateTo": "To",
     "clearFilters": "Clear",
-    "applyFilters": "Apply"
+    "applyFilters": "Apply",
+    "colActions": "Actions",
+    "renotifyTitle": "Are you sure you want to re-notify?",
+    "renotifyDesc": "This will send the webhook again and trigger actions on the target system.",
+    "renotifyConfirm": "Notify",
+    "renotifyCancel": "Cancel"
   },
   "scripts": {
     "title": "Scripts",

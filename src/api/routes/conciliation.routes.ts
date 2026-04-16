@@ -58,6 +58,12 @@ conciliationRouter.post('/:requestId/run', async (req, res) => {
   res.status(202).json({ queued: true })
 })
 
+// Re-enviar webhook de notificación
+conciliationRouter.post('/:requestId/notify', async (req, res) => {
+  await Queues.webhook.add('notify', { requestId: req.params.requestId })
+  res.status(202).json({ queued: true })
+})
+
 // Trigger manual de polling por cuenta
 conciliationRouter.post('/poll/:accountId', async (req, res) => {
   await Queues.orderIngestion.add('poll', { accountId: req.params.accountId })

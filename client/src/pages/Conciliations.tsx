@@ -1,17 +1,17 @@
 import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
-import { X, SlidersHorizontal } from 'lucide-react'
+import { X, SlidersHorizontal, Bell } from 'lucide-react'
 
 const STATUS_KEYS = ['matched', 'pending', 'processing', 'not_found', 'ambiguous', 'failed', 'expired'] as const
 
@@ -53,9 +53,15 @@ function hasActiveFilters(f: Filters) {
   return f.status !== '' || f.dateFrom !== '' || f.dateTo !== ''
 }
 
+const NOTIFIABLE_STATUSES = ['matched', 'ambiguous', 'expired']
+
 function OrdersTable({ requests, accounts, showAccount }: { requests: ConciliationRequest[]; accounts: Account[]; showAccount?: boolean }) {
   const { t } = useTranslation()
   const accountMap = Object.fromEntries(accounts.map(a => [a.id, a.name || a.bank]))
+
+  const renotify = useMutation({
+    mutationFn: (requestId: string) => api.post(`/conciliation/${requestId}/notify`),
+  })
 
   return (
     <Table>
@@ -68,6 +74,7 @@ function OrdersTable({ requests, accounts, showAccount }: { requests: Conciliati
           <TableHead>{t('conciliations.colSender')}</TableHead>
           <TableHead>{t('conciliations.colStatus')}</TableHead>
           <TableHead>{t('conciliations.colCreated')}</TableHead>
+          <TableHead>{t('conciliations.colActions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -84,11 +91,44 @@ function OrdersTable({ requests, accounts, showAccount }: { requests: Conciliati
             <TableCell className="text-muted-foreground text-xs">
               {new Date(r.created_at).toLocaleString()}
             </TableCell>
+            <TableCell>
+              {NOTIFIABLE_STATUSES.includes(r.status) ? (
+                <Dialog>
+                  <DialogTrigger render={
+                    <Button variant="outline" size="icon-sm">
+                      <Bell className="h-4 w-4" />
+                    </Button>
+                  } />
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>{t('conciliations.renotifyTitle')}</DialogTitle>
+                      <DialogDescription>{t('conciliations.renotifyDesc')}</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <DialogClose render={
+                        <Button variant="outline">
+                          {t('conciliations.renotifyCancel')}
+                        </Button>
+                      } />
+                      <DialogClose render={
+                        <Button onClick={() => renotify.mutate(r.id)}>
+                          {t('conciliations.renotifyConfirm')}
+                        </Button>
+                      } />
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <Button variant="outline" size="icon-sm" disabled>
+                  <Bell className="h-4 w-4" />
+                </Button>
+              )}
+            </TableCell>
           </TableRow>
         ))}
         {requests.length === 0 && (
           <TableRow>
-            <TableCell colSpan={showAccount ? 7 : 6} className="text-center text-muted-foreground py-8">
+            <TableCell colSpan={showAccount ? 8 : 7} className="text-center text-muted-foreground py-8">
               {t('conciliations.empty')}
             </TableCell>
           </TableRow>
