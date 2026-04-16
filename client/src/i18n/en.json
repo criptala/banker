@@ -63,7 +63,13 @@
     "colSender": "Sender",
     "colStatus": "Status",
     "colCreated": "Created",
-    "searchPlaceholder": "Search by ID, sender, amount..."
+    "searchPlaceholder": "Search by ID, sender, amount...",
+    "filters": "Filters",
+    "allStatuses": "All statuses",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "clearFilters": "Clear",
+    "applyFilters": "Apply"
   },
   "scripts": {
     "title": "Scripts",

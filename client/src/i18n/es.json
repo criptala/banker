@@ -63,7 +63,13 @@
     "colSender": "Remitente",
     "colStatus": "Estado",
     "colCreated": "Creada",
-    "searchPlaceholder": "Buscar por ID, remitente, monto..."
+    "searchPlaceholder": "Buscar por ID, remitente, monto...",
+    "filters": "Filtros",
+    "allStatuses": "Todos los estados",
+    "dateFrom": "Desde",
+    "dateTo": "Hasta",
+    "clearFilters": "Limpiar",
+    "applyFilters": "Aplicar"
   },
   "scripts": {
     "title": "Scripts",
