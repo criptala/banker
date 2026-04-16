@@ -62,7 +62,8 @@
     "colCurrency": "Moneda",
     "colSender": "Remitente",
     "colStatus": "Estado",
-    "colCreated": "Creada"
+    "colCreated": "Creada",
+    "searchPlaceholder": "Buscar por ID, remitente, monto..."
   },
   "scripts": {
     "title": "Scripts",

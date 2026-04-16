@@ -62,7 +62,8 @@
     "colCurrency": "Currency",
     "colSender": "Sender",
     "colStatus": "Status",
-    "colCreated": "Created"
+    "colCreated": "Created",
+    "searchPlaceholder": "Search by ID, sender, amount..."
   },
   "scripts": {
     "title": "Scripts",

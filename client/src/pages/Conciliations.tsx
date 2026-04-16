@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
@@ -77,8 +79,21 @@ function OrdersTable({ requests, accounts, showAccount }: { requests: Conciliati
   )
 }
 
+function filterRequests(requests: ConciliationRequest[], query: string, t: (key: string) => string): ConciliationRequest[] {
+  if (!query) return requests
+  const q = query.toLowerCase()
+  return requests.filter(r =>
+    r.external_id.toLowerCase().includes(q) ||
+    (r.sender_name && r.sender_name.toLowerCase().includes(q)) ||
+    String(r.expected_amount).includes(q) ||
+    r.currency.toLowerCase().includes(q) ||
+    t(`enums.conciliationStatus.${r.status}`).toLowerCase().includes(q)
+  )
+}
+
 export function Conciliations() {
   const { t } = useTranslation()
+  const [search, setSearch] = useState('')
 
   const { data: requests = [], isLoading: loadingReqs } = useQuery<ConciliationRequest[]>({
     queryKey: ['conciliations'],
@@ -91,12 +106,21 @@ export function Conciliations() {
   })
 
   const isLoading = loadingReqs || loadingAccounts
+  const filtered = filterRequests(requests, search, t)
 
   return (
     <div className="p-8 space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">{t('conciliations.title')}</h2>
-        <p className="text-muted-foreground">{t('conciliations.subtitle')}</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold">{t('conciliations.title')}</h2>
+          <p className="text-muted-foreground">{t('conciliations.subtitle')}</p>
+        </div>
+        <Input
+          placeholder={t('conciliations.searchPlaceholder')}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="max-w-xs"
+        />
       </div>
 
       {isLoading ? (
@@ -116,7 +140,7 @@ export function Conciliations() {
             <Card>
               <CardHeader><CardTitle>{t('conciliations.orders')}</CardTitle></CardHeader>
               <CardContent>
-                <OrdersTable requests={requests} accounts={accounts} showAccount />
+                <OrdersTable requests={filtered} accounts={accounts} showAccount />
               </CardContent>
             </Card>
           </TabsContent>
@@ -128,7 +152,7 @@ export function Conciliations() {
                   <CardTitle>{account.name || account.bank}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <OrdersTable requests={requests.filter(r => r.account_id === account.id)} accounts={accounts} />
+                  <OrdersTable requests={filtered.filter(r => r.account_id === account.id)} accounts={accounts} />
                 </CardContent>
               </Card>
             </TabsContent>
