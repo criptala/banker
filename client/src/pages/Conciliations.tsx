@@ -1,13 +1,19 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
-import { X } from 'lucide-react'
+import { X, SlidersHorizontal } from 'lucide-react'
+
+const STATUS_KEYS = ['matched', 'pending', 'processing', 'not_found', 'ambiguous', 'failed', 'expired'] as const
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   matched:    'default',
@@ -33,6 +39,18 @@ interface Account {
   id: string
   name: string
   bank: string
+}
+
+interface Filters {
+  status: string
+  dateFrom: string
+  dateTo: string
+}
+
+const emptyFilters: Filters = { status: '', dateFrom: '', dateTo: '' }
+
+function hasActiveFilters(f: Filters) {
+  return f.status !== '' || f.dateFrom !== '' || f.dateTo !== ''
 }
 
 function OrdersTable({ requests, accounts, showAccount }: { requests: ConciliationRequest[]; accounts: Account[]; showAccount?: boolean }) {
@@ -80,21 +98,11 @@ function OrdersTable({ requests, accounts, showAccount }: { requests: Conciliati
   )
 }
 
-function filterRequests(requests: ConciliationRequest[], query: string, t: (key: string) => string): ConciliationRequest[] {
-  if (!query) return requests
-  const q = query.toLowerCase()
-  return requests.filter(r =>
-    r.external_id.toLowerCase().includes(q) ||
-    (r.sender_name && r.sender_name.toLowerCase().includes(q)) ||
-    String(r.expected_amount).includes(q) ||
-    r.currency.toLowerCase().includes(q) ||
-    t(`enums.conciliationStatus.${r.status}`).toLowerCase().includes(q)
-  )
-}
-
 export function Conciliations() {
   const { t } = useTranslation()
   const [search, setSearch] = useState('')
+  const [filters, setFilters] = useState<Filters>(emptyFilters)
+  const [draft, setDraft] = useState<Filters>(emptyFilters)
 
   const { data: requests = [], isLoading: loadingReqs } = useQuery<ConciliationRequest[]>({
     queryKey: ['conciliations'],
@@ -107,46 +115,146 @@ export function Conciliations() {
   })
 
   const isLoading = loadingReqs || loadingAccounts
-  const filtered = filterRequests(requests, search, t)
+
+  const filtered = useMemo(() => {
+    let result = requests
+
+    if (search) {
+      const q = search.toLowerCase()
+      result = result.filter(r =>
+        r.external_id.toLowerCase().includes(q) ||
+        (r.sender_name && r.sender_name.toLowerCase().includes(q)) ||
+        String(r.expected_amount).includes(q) ||
+        r.currency.toLowerCase().includes(q) ||
+        t(`enums.conciliationStatus.${r.status}`).toLowerCase().includes(q)
+      )
+    }
+
+    if (filters.status) {
+      result = result.filter(r => r.status === filters.status)
+    }
+
+    if (filters.dateFrom) {
+      const from = new Date(filters.dateFrom)
+      result = result.filter(r => new Date(r.created_at) >= from)
+    }
+
+    if (filters.dateTo) {
+      const to = new Date(filters.dateTo + 'T23:59:59')
+      result = result.filter(r => new Date(r.created_at) <= to)
+    }
+
+    return result
+  }, [requests, search, filters, t])
 
   return (
     <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold">{t('conciliations.title')}</h2>
-          <p className="text-muted-foreground">{t('conciliations.subtitle')}</p>
-        </div>
-        <div className="relative max-w-xs w-full">
-          <Input
-            placeholder={t('conciliations.searchPlaceholder')}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className={search ? 'pr-8' : ''}
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+      <div>
+        <h2 className="text-2xl font-semibold">{t('conciliations.title')}</h2>
+        <p className="text-muted-foreground">{t('conciliations.subtitle')}</p>
       </div>
 
       {isLoading ? (
         <p className="text-muted-foreground text-sm">{t('conciliations.loading')}</p>
       ) : (
         <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">{t('conciliations.tabAll')}</TabsTrigger>
-            {accounts.map(account => (
-              <TabsTrigger key={account.id} value={account.id}>
-                {account.name || account.bank}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="flex items-center justify-between gap-4">
+            <TabsList>
+              <TabsTrigger value="all">{t('conciliations.tabAll')}</TabsTrigger>
+              {accounts.map(account => (
+                <TabsTrigger key={account.id} value={account.id}>
+                  {account.name || account.bank}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Input
+                  placeholder={t('conciliations.searchPlaceholder')}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className={`w-64 ${search ? 'pr-8' : ''}`}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              <Dialog onOpenChange={open => { if (open) setDraft(filters) }}>
+                <DialogTrigger render={
+                  <Button variant="outline" size="default" className="relative">
+                    <SlidersHorizontal className="h-4 w-4 mr-1.5" />
+                    {t('conciliations.filters')}
+                    {hasActiveFilters(filters) && (
+                      <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                    )}
+                  </Button>
+                } />
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('conciliations.filters')}</DialogTitle>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label>{t('conciliations.colStatus')}</Label>
+                      <Select value={draft.status} onValueChange={v => setDraft(d => ({ ...d, status: v }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('conciliations.allStatuses')}>
+                            {draft.status ? t(`enums.conciliationStatus.${draft.status}`) : t('conciliations.allStatuses')}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">{t('conciliations.allStatuses')}</SelectItem>
+                          {STATUS_KEYS.map(s => (
+                            <SelectItem key={s} value={s}>{t(`enums.conciliationStatus.${s}`)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label>{t('conciliations.dateFrom')}</Label>
+                      <Input
+                        type="date"
+                        value={draft.dateFrom}
+                        onChange={e => setDraft(d => ({ ...d, dateFrom: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label>{t('conciliations.dateTo')}</Label>
+                      <Input
+                        type="date"
+                        value={draft.dateTo}
+                        onChange={e => setDraft(d => ({ ...d, dateTo: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    {hasActiveFilters(draft) && (
+                      <Button variant="ghost" onClick={() => setDraft(emptyFilters)}>
+                        {t('conciliations.clearFilters')}
+                      </Button>
+                    )}
+                    <DialogClose render={
+                      <Button onClick={() => setFilters(draft)}>
+                        {t('conciliations.applyFilters')}
+                      </Button>
+                    } />
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
 
           <TabsContent value="all">
             <Card>
