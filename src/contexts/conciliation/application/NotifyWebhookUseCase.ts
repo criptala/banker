@@ -21,7 +21,7 @@ export class NotifyWebhookUseCase {
         )).rows[0]
       : null
 
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' }
     const webhookToken = typeof req.webhook_auth_token === 'string' && req.webhook_auth_token.trim()
       ? req.webhook_auth_token.trim()
       : null
