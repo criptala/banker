@@ -145,7 +145,8 @@
       "processing": "Processing",
       "not_found": "Not found",
       "ambiguous": "Ambiguous",
-      "failed": "Failed"
+      "failed": "Failed",
+      "expired": "Expired"
     },
     "scriptStatus": {
       "draft": "Draft",
