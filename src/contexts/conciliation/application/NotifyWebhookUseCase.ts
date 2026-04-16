@@ -6,7 +6,7 @@ export class NotifyWebhookUseCase {
   async execute({ requestId }: JobData): Promise<void> {
     const { rows: [req] } = await db.query(
       `SELECT cr.id, cr.external_id, cr.status, cr.expected_amount, cr.currency, cr.sender_name,
-              ac.webhook_url, ac.webhook_auth_type, ac.webhook_auth_token
+              ac.webhook_url, ac.webhook_auth_type, ac.webhook_auth_token, ac.auth_type, ac.auth_token
        FROM conciliation_requests cr
        JOIN account_config ac ON ac.account_id = cr.account_id
        WHERE cr.id = $1`,
@@ -24,9 +24,12 @@ export class NotifyWebhookUseCase {
     const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' }
     const webhookToken = typeof req.webhook_auth_token === 'string' && req.webhook_auth_token.trim()
       ? req.webhook_auth_token.trim()
-      : null
+      : typeof req.auth_token === 'string' && req.auth_token.trim()
+        ? req.auth_token.trim()
+        : null
+    const webhookAuthType = req.webhook_auth_type ?? req.auth_type ?? 'bearer'
     if (webhookToken) {
-      if (req.webhook_auth_type === 'api_key') headers['Authorization'] = `Api-Key ${webhookToken}`
+      if (webhookAuthType === 'api_key') headers['Authorization'] = `Api-Key ${webhookToken}`
       else headers['Authorization'] = `Bearer ${webhookToken}`
     }
 
