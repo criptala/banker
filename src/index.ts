@@ -8,27 +8,13 @@ import { EventBus } from './shared/events/EventBus.js'
 import { TransactionIngestedEvent } from './shared/events/events/TransactionIngested.event.js'
 import { ConciliationMatchedEvent } from './shared/events/events/ConciliationMatched.event.js'
 import { Queues } from './shared/infrastructure/queues/QueueRegistry.js'
-import { db } from './shared/infrastructure/db/client.js'
+import { OnTransactionIngestedUseCase } from './contexts/conciliation/application/OnTransactionIngestedUseCase.js'
 
-// Cuando llega una transacción nueva → encolar conciliación de pendientes
+const onTransactionIngested = new OnTransactionIngestedUseCase()
+
+// Cuando llega una transacción nueva → decidir si excluirla o encolar conciliación
 EventBus.subscribe<TransactionIngestedEvent>('TransactionIngested', async (event) => {
-  const { rows } = await db.query(
-    `SELECT id FROM conciliation_requests
-     WHERE account_id = $1
-       AND status IN ('pending', 'not_found')
-       AND created_at > now() - interval '5 days'`,
-    [event.accountId]
-  )
-
-  for (const req of rows) {
-    await Queues.conciliation.add(
-      'run',
-      { requestId: req.id },
-      { jobId: `conciliation_${req.id}_${Date.now()}`, removeOnComplete: true }
-    )
-  }
-
-  console.log(`[EventBus] TransactionIngested → enqueued ${rows.length} conciliation(s)`)
+  await onTransactionIngested.execute(event)
 })
 
 // Cuando hay un match → notificar webhook
