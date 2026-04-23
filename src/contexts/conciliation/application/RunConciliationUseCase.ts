@@ -4,6 +4,7 @@ import { ConciliationEngine } from '../domain/ConciliationEngine.js'
 import { ConciliationRequestRepository } from '../infrastructure/ConciliationRequestRepository.js'
 import { ConciliationAttemptRepository } from '../infrastructure/ConciliationAttemptRepository.js'
 import { ConciliatedTransactionRepository } from '../infrastructure/ConciliatedTransactionRepository.js'
+import { BankTransactionRepository } from '../../banking/infrastructure/BankTransactionRepository.js'
 import { Queues } from '../../../shared/infrastructure/queues/QueueRegistry.js'
 import crypto from 'crypto'
 
@@ -19,6 +20,7 @@ export class RunConciliationUseCase {
       const txRequestRepo = new ConciliationRequestRepository(client)
       const txAttemptRepo = new ConciliationAttemptRepository(client)
       const txMatchRepo = new ConciliatedTransactionRepository(client)
+      const bankTxRepo = new BankTransactionRepository(client)
 
       // FOR UPDATE SKIP LOCKED: si polling tiene la row lockeada, retornamos null.
       const request = await txRequestRepo.findById(requestId)
@@ -28,7 +30,7 @@ export class RunConciliationUseCase {
       const { rows: candidateRows } = await client.query(
         `SELECT id, amount, currency, sender_name, received_at
          FROM bank_transactions
-         WHERE account_id = $1 AND received_at >= now() - interval '7 days'`,
+         WHERE account_id = $1 AND excluded_at IS NULL`,
         [request.accountId]
       )
 
@@ -61,6 +63,7 @@ export class RunConciliationUseCase {
           requestId,
           bankTransactionId: result.transactionId!,
         })
+        await bankTxRepo.markExcluded(result.transactionId!)
         await txAttemptRepo.save({
           id: attemptId,
           accountId: request.accountId,

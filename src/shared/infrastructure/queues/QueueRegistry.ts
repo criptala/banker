@@ -18,5 +18,6 @@ export const Queues = {
   orderIngestion: new Queue('order-ingestion', { connection: redis, defaultJobOptions }),
   bankScrape:     new Queue('bank-scrape',     { connection: redis, defaultJobOptions }),
   conciliation:   new Queue('conciliation',    { connection: redis, defaultJobOptions }),
+  txConciliation: new Queue('tx-conciliation', { connection: redis, defaultJobOptions }),
   webhook:        new Queue('webhook',         { connection: redis, defaultJobOptions }),
 }

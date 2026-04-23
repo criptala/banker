@@ -18,6 +18,23 @@ conciliationWorker.on('failed', (job, err) => {
   console.error(`[conciliation] job ${job?.id} failed (attempt ${job?.attemptsMade}):`, err.message)
 })
 
+export const txConciliationWorker = new Worker(
+  'tx-conciliation',
+  async job => {
+    const mod = await import('../../../../contexts/conciliation/application/ProcessIncomingTransactionUseCase.js')
+    await new mod.ProcessIncomingTransactionUseCase().execute(job.data)
+  },
+  { connection: redis }
+)
+
+txConciliationWorker.on('completed', job => {
+  console.log(`[tx-conciliation] job ${job.id} completed`)
+})
+
+txConciliationWorker.on('failed', (job, err) => {
+  console.error(`[tx-conciliation] job ${job?.id} failed (attempt ${job?.attemptsMade}):`, err.message)
+})
+
 export const webhookWorker = new Worker(
   'webhook',
   async job => {
